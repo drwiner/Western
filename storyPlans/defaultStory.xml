@@ -82,11 +82,7 @@
     <action-property name="actor" action="Actions" range="A"/>
     <action-property name="source" action="has-source" range="A"/>
     <action-property name="location" action="has-location" range="coordinate2d"/>
-    <action-property name="type" action="spawn-rune" range="string"/>
     <action-property name="end-angle" action="rotate" range="y-degrees"/>
-    <action-property name="rotation" action="creep-attack" range="double"/>
-    <action-property name="name" action="summon" range="string"/>
-    <action-property name="level" action="has-level" range="int"/>
     <action-property name="time" action="Actions" range="T"/>
 	<action-property name="action" action="spawn-hero" range="string"/>
 	<action-property name="action" action="initialize-animation" range="string"/>
