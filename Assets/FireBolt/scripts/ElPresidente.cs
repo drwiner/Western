@@ -41,8 +41,6 @@ public class ElPresidente : MonoBehaviour
 
     public static ElPresidente Instance;
 
-    private AssetBundle actorsAndAnimations = null;
-    private AssetBundle terrain = null;
     private bool initialized = false;
     private bool initNext = false;
     private bool initTriggered = false;
@@ -99,12 +97,8 @@ public class ElPresidente : MonoBehaviour
     DateTime actorsAndAnimationsBundleLastReadTimeStamp = DateTime.Now;
     bool reloadActorsAndAnimationsBundle = false;
 
-    DateTime terrainBundleLastReadTimeStamp = DateTime.Now;
-    bool reloadTerrainBundle = false;
-
     bool generateKeyframes = true;
 
-    public bool GenerateKeyframes { get { return generateKeyframes; } }
 
     /// <summary>
     /// story time.  controlled by discourse actions
@@ -125,9 +119,7 @@ public class ElPresidente : MonoBehaviour
 
     //number of milliseconds to advance the story and discourse time on update
     public uint? timeUpdateIncrement = null;
-    public bool GenerateVideoFrames { get { return generateVideoFrames; } }
-    private bool generateVideoFrames = false;
-    FrameSaver frameSaver;
+   
 
     private bool implicitActorCreation;
 
@@ -174,17 +166,11 @@ public class ElPresidente : MonoBehaviour
     /// and reloads the whole shebang...almost like you would expect.</param>
     /// <param name="generateKeyframes">optional default false. makes keyframes for display over scrubber.
     /// locks down the UI for some time at startup to execute whole cinematic once all speedy like</param>
-    public void Init(bool logDebug = false, InputSet newInputSet = null, VideoInputSet videoInputSet = null,
+    public void Init(bool logDebug = false, InputSet newInputSet = null,
         bool forceFullReload = false, bool generateKeyframes = false, bool implicitActorCreation = false, bool logStatistics = false,
         string statFile = null)
     {
-        if (videoInputSet != null)
-        {
-            this.timeUpdateIncrement = (uint?)(1000f / (float?)videoInputSet.FrameRate);
-            this.generateVideoFrames = true;
-            frameSaver = gameObject.AddComponent<FrameSaver>();
-            frameSaver.Initialize(videoInputSet);
-        }
+
 
         this.generateKeyframes = generateKeyframes;
         this.implicitActorCreation = implicitActorCreation;
@@ -197,18 +183,7 @@ public class ElPresidente : MonoBehaviour
             Extensions.InitStatFile();
         }
 
-        if (generateVideoFrames)
-        {
-            // Find the canvase game object.
-            GameObject canvasGO = GameObject.Find("Canvas");
-
-            // Get the canvas component from the game object.
-            Canvas canvas = canvasGO.GetComponent<Canvas>();
-
-            // Toggle the canvas display off.
-            canvas.enabled = false;
-
-        }
+       
         if (whereWeAt == null) //if there is no slider to display them on, don't generate keyframes
         {
             this.generateKeyframes = false;
@@ -226,20 +201,17 @@ public class ElPresidente : MonoBehaviour
             reloadStoryPlan = true;
             reloadCameraPlan = true;
             reloadCinematicModel = true;
-            reloadActorsAndAnimationsBundle = true;
-            reloadTerrainBundle = true;
+
         }
         else //we actually should figure out what's changed so we can reload only those required inputs
         {
             reloadStoryPlan = requiresReload(currentInputSet.StoryPlanPath, newInputSet.StoryPlanPath, storyPlanLastReadTimeStamp);
             reloadCameraPlan = requiresReload(currentInputSet.CameraPlanPath, newInputSet.CameraPlanPath, cameraPlanLastReadTimeStamp);
             reloadCinematicModel = requiresReload(currentInputSet.CinematicModelPath, newInputSet.CinematicModelPath, cinematicModelPlanLastReadTimeStamp);
-            reloadActorsAndAnimationsBundle = requiresReload(currentInputSet.ActorsAndAnimationsBundlePath, newInputSet.ActorsAndAnimationsBundlePath, actorsAndAnimationsBundleLastReadTimeStamp);
-            reloadTerrainBundle = requiresReload(currentInputSet.TerrainBundlePath, newInputSet.TerrainBundlePath, terrainBundleLastReadTimeStamp);
         }
 
         if (createdGameObjects != null) createdGameObjects.Destroy("InstantiatedObjects");
-        if (reloadTerrainBundle && createdGameObjects != null) createdGameObjects.Destroy("Terrain");
+      
         initialized = false;
         initTriggered = true;
         currentInputSet = newInputSet;
@@ -301,37 +273,8 @@ public class ElPresidente : MonoBehaviour
             cinematicModelPlanLastReadTimeStamp = DateTime.Now;
         }
 
-        if (actorsAndAnimations != null && reloadActorsAndAnimationsBundle)
-            actorsAndAnimations.Unload(true);
 
-
-        if (reloadActorsAndAnimationsBundle)
-        {
-            Debug.Log(string.Format("loading actors bundle[{0}] @ [{1}].  last read [{2}]",
-                         currentInputSet.ActorsAndAnimationsBundlePath, DateTime.Now.ToString(timestampFormat), storyPlanLastReadTimeStamp.ToString(timestampFormat)));
-            var actorBundleLoadStart = DateTime.Now;
-            actorsAndAnimations = AssetBundle.CreateFromFile(currentInputSet.ActorsAndAnimationsBundlePath);
-            loadStats.Add("actor bundle", getElapsedTimeMillis(actorBundleLoadStart).ToString());
-            actorsAndAnimationsBundleLastReadTimeStamp = DateTime.Now;
-        }
-
-        if (terrain != null && reloadTerrainBundle)
-            terrain.Unload(true);
-
-        if (reloadTerrainBundle)
-        {
-            Debug.Log(string.Format("loading terrain bundle[{0}] @ [{1}].  last read [{2}]",
-                                    currentInputSet.TerrainBundlePath, DateTime.Now.ToString(timestampFormat), storyPlanLastReadTimeStamp.ToString(timestampFormat)));
-            var terrainBundleLoadStart = DateTime.Now;
-            terrain = AssetBundle.CreateFromFile(currentInputSet.TerrainBundlePath);
-            loadStats.Add("terrain bundle", getElapsedTimeMillis(terrainBundleLoadStart).ToString());
-            terrainBundleLastReadTimeStamp = DateTime.Now;
-            var terrainCreateStart = DateTime.Now;
-            instantiateTerrain();
-            loadStats.Add("terrain create", getElapsedTimeMillis(terrainCreateStart).ToString());
-        }
-
-        if (reloadStoryPlan || reloadActorsAndAnimationsBundle || reloadCinematicModel)
+        if (reloadStoryPlan || reloadCinematicModel)
         {
             Debug.Log(string.Format("upstream components reloaded, rebuilding actor action queue @ [{0}].",
                                     DateTime.Now.ToString(timestampFormat)));
@@ -377,36 +320,12 @@ public class ElPresidente : MonoBehaviour
         reloadCameraPlan = false;
         reloadCinematicModel = false;
         reloadStoryPlan = false;
-        reloadTerrainBundle = false;
+
         loadStats.Add("total", getElapsedTimeMillis(loadStart).ToString());
         Extensions.LogStatistics(loadStats);
     }
 
-    private void instantiateTerrain()
-    {
-        var terrainPrefab = terrain.LoadAsset(cinematicModel.Terrain.TerrainFileName);
-        if (!terrainPrefab)
-        {
-            Debug.Log(string.Format("terrain [{0}] not found in asset bundle", cinematicModel.Terrain.TerrainFileName));
-        }
-        Vector3 v;
-        cinematicModel.Terrain.Location.TryParseVector3(out v);
-        var t = Instantiate(terrainPrefab, v, Quaternion.identity) as GameObject;
-        t.name = "Terrain";
-        t.transform.SetParent(GameObject.Find("FireBolt").transform, true);
-        createdGameObjects.Add(t.name, t);
-        Terrain activeTerrain = Terrain.activeTerrain;
-        //foreach(var treePrototype in activeTerrain.terrainData.treePrototypes)
-        //{
-        //    OcclusionDescriptor descriptor = treePrototype.prefab.AddComponent<OcclusionDescriptor>();
-        //    descriptor.colliderOpacity = Opacity.Low;
-        //}
-        //activeTerrain.terrainData.RefreshPrototypes();
-
-        //Opacity opacity = activeTerrain.terrainData.treePrototypes[
-        //                    activeTerrain.terrainData.treeInstances[0].prototypeIndex
-        //                  ].prefab.GetComponent<OcclusionDescriptor>().colliderOpacity;
-    }
+ 
 
     private void loadStructuredImpulsePlan(string storyPlanPath)
     {
@@ -422,13 +341,7 @@ public class ElPresidente : MonoBehaviour
 
     public AssetBundle GetActiveAssetBundle()
     {
-        if (actorsAndAnimations == null)
-        {
-            Debug.Log("attempting to load from asset bundle before it is set. " +
-                      "use ElPresidente.SetActiveAssetBundle() to load an asset bundle");
-            return null;
-        }
-        return actorsAndAnimations;
+        return null;
     }
 
 
@@ -547,14 +460,7 @@ public class ElPresidente : MonoBehaviour
         executingActorActions.ExecuteList(ElPresidente.currentStoryTime);
         executingCameraActions.ExecuteList(ElPresidente.currentDiscourseTime);
 
-        if (generateVideoFrames)
-        {
-            if (cameraActionList.EndDiscourseTime < currentDiscourseTime)
-            {
-                frameSaver.StopCapture();
-                Application.Quit();
-            }
-        }
+       
     }
 
     /// <summary>
@@ -779,21 +685,6 @@ public class ElPresidente : MonoBehaviour
             Profiler.EndSample();
         }
     }
-
-    ///// <summary>
-    ///// attempts to list camera actions in debugCameraText UI element
-    ///// </summary>
-    //public void ShowCameraExecuting()
-    //{
-    //    if (!debugCameraText) return;        
-    //    StringBuilder outputText = new StringBuilder("Executing Camera" + Environment.NewLine);
-    //    foreach(var action in executingCameraActions)
-    //    {
-    //        outputText.Append(action.ToString()).Append(Environment.NewLine);
-    //    }
-    //    debugCameraText.text = outputText.ToString();
-    //}
-
 
     public void scaleTime(float scale)
     {

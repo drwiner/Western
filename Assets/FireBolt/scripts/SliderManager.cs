@@ -42,25 +42,6 @@ public class SliderManager : MonoBehaviour
             return;
         }
 
-        //don't set up the thumbnail if we don't want the keyframes displayed
-        if (ElPresidente.Instance.GenerateKeyframes)
-        {            
-            if (!registerSliderThumbnailEvents())
-            {
-                return;
-            }
-
-            // Get the slider's transform rectangle.
-            sliderRect = slider.GetComponent<RectTransform>();
-
-            //create a thumbnail to use for displaying keyframes and staple it onto the canvas
-            thumb = (GameObject.Instantiate(Resources.Load("Thumbnail")) as GameObject).GetComponent<UnityEngine.UI.RawImage>();
-            var canvas = GameObject.Find("Canvas");
-            thumb.transform.SetParent(canvas.transform);
-
-            // Remember that initialization has not occurred.
-            hasInitialized = false;
-        }
 	}
 
     private bool registerSliderScrubEvents()
@@ -144,10 +125,7 @@ public class SliderManager : MonoBehaviour
 
 	void Update ()
     {
-        if (!ElPresidente.Instance.GenerateKeyframes) //don't draw keyframes
-        {
-            return;
-        }
+        return;
 
         // If keyframes have not been loaded and El Presidente has initialized the keyframes...
         if (!hasInitialized && ElPresidente.Instance.KeyframesGenerated)

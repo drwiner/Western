@@ -70,40 +70,6 @@ namespace Assets.scripts
             return false;
         }
 
-        //private static void buildInitialState(FireBoltActionList aaq) //TODO actor model defaulting a la create actions
-        //{
-        //    var interval = new UintT(new UintV(0), new UintV(1));
-        //    var initialPositions = from sentence in story.Sentences
-        //                           where sentence is Predicate
-        //                           let p = (Predicate)sentence
-        //                           where p.Temporal &&      
-        //                                 p.Name == "at" &&
-        //                                 p.Time is UintT &&
-        //                                 p.Terms[0] is IConstant &&
-        //                                 p.Terms[1] is IConstant<Coordinate2D> &&
-        //                                 story.IntervalSet.IncludesOrMeetsStartOf<UintV, UintT>((UintT)p.Time, interval) 
-        //                           select new { Actor = p.Terms[0].Name, Location = (p.Terms[1] as IConstant<Coordinate2D>).Value };
-
-        //    Extensions.Log("building init state creation actions");
-        //    foreach (var initPos in initialPositions)
-        //    {
-        //        Extensions.Log(initPos.Actor + ", " + initPos.Location.ToString());
-        //        CM.Actor actor;
-        //        if (!cm.TryGetActor(initPos.Actor,out actor))
-        //        {
-        //            Extensions.Log("actor [" + initPos.Actor + "] not found in cinematic model.");
-        //            continue;
-        //        }
-
-        //        string modelFileName = actor.Model;
-        //        if (string.IsNullOrEmpty(modelFileName))
-        //        {
-        //            Extensions.Log("model name for actor[" + initPos.Actor + "] not found in cinematic model.");
-        //            continue;
-        //        }
-        //        aaq.Add(new Create(0, initPos.Actor, modelFileName, initPos.Location.ToVector3()));
-        //    }
-        //}
 
         private static void createActors(FireBoltActionList aaq)
         {
