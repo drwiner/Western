@@ -8,6 +8,7 @@ namespace Assets.scripts
 
     public class FireBoltInitializer : MonoBehaviour
     {
+        public ElPresidente fireboltObjectInstance;
         private static readonly char encodingDelimiter = ':';
         // Use this for initialization
         void Start()
@@ -20,7 +21,7 @@ namespace Assets.scripts
             inputFiles.CinematicModelPath = "cinematicModels/defaultModel.xml";
             inputFiles.StoryPlanPath = "storyPlans/defaultStory.xml";
 
-            ElPresidente.Instance.Init(logDebug, inputFiles, false, false, false, false, "statfile.txt");
+            fireboltObjectInstance.Init(logDebug, inputFiles, false, false, false, false, "statfile.txt");
         }
     }
 }
